@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import api from '../constant/axiosConfig'
+import api from '../services/axiosInstance'
 
 const FetchUsers = () => {
   const [users, setUsers] = useState([]);
@@ -74,10 +74,10 @@ const FetchUsers = () => {
 
             {/* Followers & Repos */}
             <div className="mt-4 flex gap-4">
-              <span className="bg-blue-600 px-4 py-1 rounded-lg text-sm">
+              <span className="bg-blue-600 p-2 rounded-lg text-sm text-center">
                 Followers: {user.followers}
               </span>
-              <span className="bg-green-600 px-4 py-1 rounded-lg text-sm">
+              <span className="bg-green-600 p-2 rounded-lg text-sm text-center">
                 Repos: {user.public_repos}
               </span>
             </div>
