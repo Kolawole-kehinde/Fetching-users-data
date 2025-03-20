@@ -1,51 +1,73 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { IoSearch } from "react-icons/io5";
 import api from "../services/axiosInstance";
 import { useNavigate } from "react-router";
 
 const FetchUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate(); // Initialize navigate
+  const [searchInput, setSearchInput] = useState("");
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const getUsers = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get("/users");
-        setUsers(response.data);
-      } catch (error) {
-        console.log("Error fetching users:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getUsers();
+  const getUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get("/users");
+      setUsers(data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return (
-    <div className="flex flex-col items-center p-6 bg-gray-900 min-h-screen">
-      {loading && <p className="text-white text-lg">Loading...</p>}
+  useEffect(() => {
+    getUsers();
+  }, [getUsers]);
 
-      {/* Display Users */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl">
-        {users.map((user) => (
-          <div
-            key={user.id}
-            className="bg-gray-800 text-white p-6 rounded-lg shadow-lg flex flex-col items-center cursor-pointer"
-            onClick={() => navigate(`/user/${user.login}`)} // Redirect on click
-          >
-            <img
-              src={user.avatar_url}
-              alt={user.login}
-              className="w-24 h-24 rounded-full border-4 border-blue-500"
-            />
-            <h2 className="text-xl font-semibold mt-3">{user.login}</h2>
-            {user.name && <p className="text-lg text-gray-300">{user.name}</p>}
-            {user.bio && <p className="text-sm text-gray-400 mt-2">{user.bio}</p>}
-          </div>
-        ))}
+  const filteredUsers = users.filter((user) =>
+    user.login?.toLowerCase().includes(searchInput.toLowerCase())
+  );
+
+  return (
+    <div className="flex flex-col items-center p-6 bg-gray-900 min-h-screen text-white">
+      {/* The Search Input */}
+      <div className="relative w-full max-w-lg mb-6">
+        <input
+          type="text"
+          placeholder="Search users..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="w-full p-3 pl-10 rounded-lg bg-gray-800 text-white border border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
+        />
+        <IoSearch className="absolute right-3 top-3 text-gray-400" />
       </div>
+
+      {/* Loading */}
+      {loading ? (
+        <p className="text-lg">Loading...</p>
+      ) : filteredUsers.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-6xl">
+          {filteredUsers.map(({ id, login, avatar_url, name, bio }) => (
+            <div
+              key={id}
+              onClick={() => navigate(`/user/${login}`)}
+              className="bg-gray-800 p-6 rounded-lg shadow-lg flex flex-col items-center cursor-pointer hover:bg-gray-700 transition"
+            >
+              <img
+                src={avatar_url}
+                alt={login}
+                className="w-24 h-24 rounded-full border-4 border-blue-500"
+              />
+              <h2 className="text-xl font-semibold mt-3">{login}</h2>
+              {name && <p className="text-lg text-gray-300">{name}</p>}
+              {bio && <p className="text-sm text-gray-400 mt-2">{bio}</p>}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-400">No users found</p>
+      )}
     </div>
   );
 };
