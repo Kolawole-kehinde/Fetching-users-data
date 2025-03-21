@@ -1,46 +1,60 @@
-import { useEffect, useState } from "react";
-import api from "../services/axiosInstance";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router";
+import api from "../services/axiosInstance";
 
 const UserFullDetails = () => {
   const { username } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchUserDetails = async () => {
-      setLoading(true)
-      try {
-        const response = await api.get(`/users/${username}`);
-        setUser(response.data);
-      } catch (error) {
-        console.error("Error fetching user details:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserDetails();
+  // Fetch user details
+  const fetchUserDetails = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data } = await api.get(`/users/${username}`);
+      setUser(data);
+    } catch (err) {
+      console.error("Error fetching user details:", err);
+      setError("Failed to fetch user details.");
+    } finally {
+      setLoading(false);
+    }
   }, [username]);
 
+  useEffect(() => {
+    fetchUserDetails();
+  }, [fetchUserDetails]);
+
+  // Loading state
   if (loading) {
     return <p className="text-white text-lg text-center mt-10">Loading...</p>;
   }
 
+  // Error state
+  if (error) {
+    return <p className="text-red-500 text-lg text-center mt-10">{error}</p>;
+  }
+
+  // No user found
   if (!user) {
     return <p className="text-white text-lg text-center mt-10">User not found.</p>;
   }
 
   return (
     <div className="flex flex-col items-center p-6 bg-gray-900 min-h-screen text-white">
+      {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className="mb-6 px-4 py-1 bg-blue-600 text-white font-bold rounded-lg "
+        className="mb-6 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
       >
         ← Back
       </button>
 
+      {/* User Profile Card */}
       <div className="bg-gray-800 p-8 rounded-lg shadow-lg text-center max-w-lg w-full">
         <img
           src={user.avatar_url}
@@ -59,10 +73,10 @@ const UserFullDetails = () => {
 
         <div className="mt-4 flex justify-center gap-4">
           <span className="bg-blue-600 px-4 py-2 rounded-lg text-sm">
-            Followers: {user.followers}
+            Followers: {user.followers ?? 0}
           </span>
           <span className="bg-green-600 px-4 py-2 rounded-lg text-sm">
-            Repos: {user.public_repos}
+            Repos: {user.public_repos ?? 0}
           </span>
         </div>
 

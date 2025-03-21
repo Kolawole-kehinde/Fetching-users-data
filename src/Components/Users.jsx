@@ -7,15 +7,19 @@ const FetchUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState("");
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // Fetch Users from API
   const getUsers = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const { data } = await api.get("/users");
       setUsers(data);
-    } catch (error) {
-      console.error("Error fetching users:", error);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      setError("Unable to fetch users. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -39,13 +43,21 @@ const FetchUsers = () => {
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           className="w-full p-3 pl-10 rounded-lg bg-gray-800 text-white border border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
+          aria-label="Search users"
         />
         <IoSearch className="absolute right-3 top-3 text-gray-400" />
       </div>
 
-      {/* Loading */}
+      {/* Loading and Error Handling */}
       {loading ? (
-        <p className="text-lg">Loading...</p>
+        <div  className="flex items-center justify-center w-full h-screen">
+          <div className="w-12 h-12 border-4 border-blue-500 rounded-full loader">
+             {/* <p className="text-lg">Loading...</p> */}
+             </div>
+        </div>
+       
+      ) : error ? (
+        <p className="text-red-500">{error}</p>
       ) : filteredUsers.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-6xl">
           {filteredUsers.map(({ id, login, avatar_url, name, bio }) => (
@@ -56,7 +68,7 @@ const FetchUsers = () => {
             >
               <img
                 src={avatar_url}
-                alt={login}
+                alt={`Avatar of ${login}`}
                 className="w-24 h-24 rounded-full border-4 border-blue-500"
               />
               <h2 className="text-xl font-semibold mt-3">{login}</h2>
